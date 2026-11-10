@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AI Braille Recognition & Speech Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1326;
+            --card: #1a2238;
+            --border: #ffffff20;
+            --primary: #6366f1;
+            --muted: #94a3b8
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Outfit, sans-serif
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, #0a0f1d, #15102a, #0d1326);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px
+        }
+
+        .container {
+            width: 100%;
+            max-width: 780px;
+            background: #1a2238cc;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 28px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 50px #0008
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 22px
+        }
+
+        .badge {
+            color: #a5b4fc;
+            background: #6366f125;
+            border: 1px solid #6366f150;
+            border-radius: 30px;
+            padding: 5px 12px;
+            font-size: 12px
+        }
+
+        h1 {
+            font-size: 30px;
+            margin: 12px 0 5px
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 14px
+        }
+
+        .tabs,
+        .filters,
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center
+        }
+
+        .tabs {
+            background: #0f172a99;
+            padding: 5px;
+            border-radius: 12px;
+            margin-bottom: 18px
+        }
+
+        button,
+        select {
+            cursor: pointer
+        }
+
+        .tab,
+        .secondary,
+        .retake,
+        .filter,
+        .action {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 15px;
+            color: var(--muted);
+            background: #ffffff0d
+        }
+
+        .tab {
+            flex: 1;
+            font-weight: 600
+        }
+
+        .active,
+        .tab.active,
+        .filter.active {
+            background: var(--primary);
+            color: white
+        }
+
+        .drop {
+            border: 2px dashed #6366f166;
+            border-radius: 16px;
+            padding: 35px;
+            text-align: center;
+            cursor: pointer;
+            background: #0f172a66;
+            margin-bottom: 18px
+        }
+
+        .drop:hover {
+            border-color: var(--primary)
+        }
+
+        .camera,
+        .preview {
+            display: none;
+            text-align: center;
+            margin-bottom: 18px;
+            background: #0f172a66;
+            padding: 16px;
+            border-radius: 15px
+        }
+
+        video {
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            border-radius: 12px
+        }
+
+        .preview img {
+            max-width: 100%;
+            max-height: 240px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 10px
+        }
+
+        .filters {
+            margin: 12px 0
+        }
+
+        .filter {
+            padding: 6px 12px;
+            font-size: 12px
+        }
+
+        .settings {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: #0f172a66;
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 18px
+        }
+
+        select {
+            background: #1e293b;
+            color: white;
+            border: 1px solid #ffffff30;
+            border-radius: 9px;
+            padding: 9px;
+            max-width: 100%
+        }
+
+        .process {
+            width: 100%;
+            padding: 14px;
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
+            color: white;
+            font-size: 16px;
+            font-weight: 700
+        }
+
+        button:disabled {
+            opacity: .4;
+            cursor: not-allowed
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #a5b4fc
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #ffffff30;
+            border-top-color: #c084fc;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            animation: spin .8s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .results {
+            display: grid;
+            gap: 14px;
+            margin-top: 22px
+        }
+
+        .result {
+            background: #0f172a99;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .result-head {
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 8px
+        }
+
+        .copy {
+            background: none;
+            border: 0;
+            color: #a5b4fc
+        }
+
+        .output {
+            font-size: 18px;
+            line-height: 1.5;
+            word-break: break-word;
+            min-height: 28px
+        }
+
+        .braille {
+            font: 28px 'JetBrains Mono';
+            color: #c084fc;
+            letter-spacing: 4px
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .action {
+            font-weight: 600;
+            text-align: center
+        }
+
+        .play {
+            color: #34d399;
+            border-color: #10b98166
+        }
+
+        .stop {
+            color: #f87171;
+            border-color: #ef444466
+        }
+
+        .download {
+            color: #a5b4fc;
+            border-color: #6366f166
+        }
+
+        @media(max-width:500px) {
+            .container {
+                padding: 18px
+            }
+
+            h1 {
+                font-size: 24px
+            }
+
+            .drop {
+                padding: 25px 10px
+            }
+
+            .settings {
+                display: block
+            }
+
+            .settings select {
+                width: 100%;
+                margin-top: 10px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <span class="badge">🌐 OCR & Braille Voice Studio</span>
+            <h1>Braille Recognition & Speech</h1>
+            <p>Upload an image or use your camera to convert words & sentences between Braille and Audio</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" id="tabUpload" onclick="switchMode('upload')">📁 File Upload</button>
+            <button class="tab" id="tabCamera" onclick="switchMode('camera')">📸 Live Camera</button>
+        </div>
+
+        <div class="drop" id="drop" onclick="fileInput.click()">
+            <div style="font-size:38px">📁</div>
+            <strong>Click to upload or drag & drop</strong>
+            <p style="font-size:12px;color:#64748b;margin-top:6px">PNG, JPG, WEBP</p>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" hidden>
+
+        <div class="camera" id="camera">
+            <video id="video" autoplay playsinline></video>
+            <div class="controls" style="margin-top:12px">
+                <button class="action play" onclick="capture()">📸 Snap Photo</button>
+                <button class="secondary" id="startBtn" onclick="startCamera()">Turn On Camera</button>
+            </div>
+        </div>
+        <canvas id="canvas" hidden></canvas>
+
+        <div class="preview" id="preview">
+            <img id="image" alt="Preview">
+            <div class="filters">
+                <button class="filter active" onclick="filterImage('none',this)">Original</button>
+                <button class="filter" onclick="filterImage('grayscale(100%)',this)">Grayscale</button>
+                <button class="filter" onclick="filterImage('grayscale(100%) contrast(300%)',this)">Threshold</button>
+            </div>
+            <button class="secondary" onclick="resetImage()">🔄 Choose Different Image / Retake</button>
+        </div>
+
+        <div class="settings">
+            <label>🌐 Voice Audio Language:</label>
+            <select id="lang">
+                <optgroup label="Popular Languages">
+                    <option value="en">English</option>
+                    <option value="ta">Tamil (தமிழ்)</option>
+                    <option value="hi">Hindi</option>
+                    <option value="te">Telugu</option>
+                    <option value="ml">Malayalam</option>
+                    <option value="kn">Kannada</option>
+                    <option value="bn">Bengali</option>
+                    <option value="gu">Gujarati</option>
+                    <option value="mr">Marathi</option>
+                    <option value="pa">Punjabi</option>
+                    <option value="ur">Urdu</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="ar">Arabic</option>
+                    <option value="zh-CN">Chinese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                    <option value="ru">Russian</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="it">Italian</option>
+                </optgroup>
+                <optgroup id="allLangs" label="All Languages (A–Z)"></optgroup>
+            </select>
+        </div>
+
+        <button class="process" id="process" onclick="processImage()" disabled>⚡ Extract & Translate (Text ↔ Braille
+            Speech)</button>
+        <div class="loader" id="loader">
+            <div class="spinner"></div>Processing image via OCR & synthesizing audio...
+        </div>
+
+        <div class="results">
+            <div class="result">
+                <div class="result-head">BRAILLE SENTENCE / PATTERN <button class="copy"
+                        onclick="copyResult('braille')">📋 Copy</button></div>
+                <div class="output braille" id="braille">—</div>
+            </div>
+            <div class="result">
+                <div class="result-head">RECOGNIZED / TRANSLATED SENTENCE <button class="copy"
+                        onclick="copyResult('text')">📋 Copy</button></div>
+                <div class="output" id="text">—</div>
+            </div>
+            <div class="actions">
+                <button class="action play" id="play" onclick="playAudio()" disabled>🔊 Play Audio</button>
+                <button class="action stop" id="stop" onclick="stopAudio()" disabled>⏹ Stop Audio</button>
+                <button class="action download" id="downloadAudio" onclick="downloadAudio()" disabled>📥 Download
+                    MP3</button>
+                <button class="action download" id="downloadText" onclick="downloadText()" disabled>📄 Download Text &
+                    Braille</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = window.location.protocol === 'file:' ? 'http://127.0.0.1:5000' : '';
+        const $ = id => document.getElementById(id);
+        let file = null, stream = null, audio = null;
+
+        const languages = {
+            af: 'Afrikaans', am: 'Amharic', ar: 'Arabic', bg: 'Bulgarian', bn: 'Bengali', bs: 'Bosnian', ca: 'Catalan', cs: 'Czech', cy: 'Welsh', da: 'Danish', de: 'German', el: 'Greek', en: 'English', es: 'Spanish', et: 'Estonian', eu: 'Basque', fi: 'Finnish', fr: 'French', 'fr-CA': 'French (Canada)', gl: 'Galician', gu: 'Gujarati', ha: 'Hausa', hi: 'Hindi', hr: 'Croatian', hu: 'Hungarian', id: 'Indonesian', is: 'Icelandic', it: 'Italian', iw: 'Hebrew', ja: 'Japanese', jw: 'Javanese', km: 'Khmer', kn: 'Kannada', ko: 'Korean', la: 'Latin', lt: 'Lithuanian', lv: 'Latvian', ml: 'Malayalam', mr: 'Marathi', ms: 'Malay', my: 'Myanmar', ne: 'Nepali', nl: 'Dutch', no: 'Norwegian', pa: 'Punjabi', pl: 'Polish', pt: 'Portuguese (Brazil)', 'pt-PT': 'Portuguese (Portugal)', ro: 'Romanian', ru: 'Russian', si: 'Sinhala', sk: 'Slovak', sq: 'Albanian', sr: 'Serbian', su: 'Sundanese', sv: 'Swedish', sw: 'Swahili', ta: 'Tamil', te: 'Telugu', th: 'Thai', tl: 'Filipino', tr: 'Turkish', uk: 'Ukrainian', ur: 'Urdu', vi: 'Vietnamese', yue: 'Cantonese', 'zh-CN': 'Chinese (Simplified)', 'zh-TW': 'Chinese (Taiwan)', zh: 'Chinese (Mandarin)'
+        };
+
+        function populateLanguages(data) {
+            $('allLangs').innerHTML = '';
+            Object.keys(data).sort((a, b) => data[a].localeCompare(data[b])).forEach(code => {
+                let o = new Option(`${data[code]} (${code})`, code); $('allLangs').append(o);
+            });
+        }
+        populateLanguages(languages);
+        fetch(API + '/languages').then(r => r.json()).then(populateLanguages).catch(() => { });
+
+        function switchMode(mode) {
+            $('tabUpload').classList.toggle('active', mode === 'upload');
+            $('tabCamera').classList.toggle('active', mode === 'camera');
+            if (mode === 'upload') { stopCamera(); $('camera').style.display = 'none'; $('drop').style.display = file ? 'none' : 'block'; $('preview').style.display = file ? 'block' : 'none'; }
+            else { $('drop').style.display = 'none'; file ? $('preview').style.display = 'block' : startCamera(); }
+        }
+
+        $('fileInput').onchange = e => { if (e.target.files[0]) loadFile(e.target.files[0]); };
+        $('drop').ondragover = e => { e.preventDefault(); $('drop').style.borderColor = '#6366f1'; };
+        $('drop').ondragleave = () => $('drop').style.borderColor = '';
+        $('drop').ondrop = e => { e.preventDefault(); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); };
+
+        function loadFile(f) {
+            file = f; $('image').src = URL.createObjectURL(f);
+            $('preview').style.display = 'block'; $('drop').style.display = 'none'; $('camera').style.display = 'none'; $('process').disabled = false;
+        }
+        async function startCamera() {
+            $('camera').style.display = 'block'; $('preview').style.display = 'none'; $('drop').style.display = 'none';
+            try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); $('video').srcObject = stream; $('startBtn').style.display = 'none'; }
+            catch (e) { alert('Camera access failed. Allow camera permission.'); $('startBtn').style.display = 'inline-block'; }
+        }
+        function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
+        function capture() {
+            if (!$('video').videoWidth) return;
+            $('canvas').width = $('video').videoWidth; $('canvas').height = $('video').videoHeight;
+            $('canvas').getContext('2d').drawImage($('video'), 0, 0);
+            $('canvas').toBlob(b => loadFile(new File([b], 'capture.jpg', { type: 'image/jpeg' })), 'image/jpeg');
+            stopCamera();
+        }
+        function resetImage() {
+            file = null; $('fileInput').value = ''; $('image').src = ''; $('preview').style.display = 'none'; $('process').disabled = true;
+            $('tabCamera').classList.contains('active') ? startCamera() : ($('drop').style.display = 'block', stopCamera());
+        }
+        function filterImage(f, b) {
+            document.querySelectorAll('.filter').forEach(x => x.classList.remove('active')); b.classList.add('active'); $('image').style.filter = f;
+        }
+
+        async function processImage() {
+            if (!file) return alert('Please upload or capture an image!');
+            stopAudio(); $('process').style.display = 'none'; $('loader').style.display = 'block';
+            try {
+                let fd = new FormData(); fd.append('file', file); fd.append('lang', $('lang').value);
+                let r;
+                try {
+                    r = await fetch(API + '/predict', { method: 'POST', body: fd });
+                } catch (e) {
+                    console.error('Could not connect to Flask:', e);
+                    alert('Could not connect to Flask at ' + (API || window.location.origin) + '. Make sure the server is running.');
+                    return;
+                }
+                if (!r.ok) {
+                    const details = await r.text();
+                    throw Error('Flask returned HTTP ' + r.status + (details ? ': ' + details : ''));
+                }
+                let d = await r.json();
+                $('braille').textContent = d.braille || '—'; $('text').textContent = d.text || '—';
+                if (d.audio_url) {
+                    $('play').dataset.url = API + d.audio_url + '?t=' + Date.now();
+                    $('downloadAudio').dataset.url = API + d.audio_url + '?download=1&t=' + Date.now();
+                    $('play').disabled = $('downloadAudio').disabled = false; playAudio();
+                }
+                $('downloadText').disabled = false;
+            } catch (e) { alert(e.message); console.error(e); }
+            finally { $('loader').style.display = 'none'; $('process').style.display = 'block'; }
+        }
+        function playAudio() {
+            let url = $('play').dataset.url; if (!url) return;
+            stopAudio(); audio = new Audio(url); $('play').textContent = '🔊 Playing...'; $('stop').disabled = false;
+            audio.onended = resetAudio; audio.onerror = resetAudio; audio.play().catch(resetAudio);
+        }
+        function stopAudio() { if (audio) { audio.pause(); audio.currentTime = 0; audio = null; } resetAudio(); }
+        function resetAudio() { $('play').textContent = '🔊 Play Audio'; $('stop').disabled = true; }
+        function downloadAudio() {
+            let a = document.createElement('a'); a.href = $('downloadAudio').dataset.url; a.download = 'braille_speech.mp3'; a.click();
+        }
+        function downloadText() {
+            let content = `BRAILLE RECOGNITION STUDIO REPORT
+Date: ${new Date().toLocaleString()}
+Language: ${$('lang').selectedOptions[0].text}
+
+TEXT:
+${$('text').textContent}
+
+BRAILLE:
+${$('braille').textContent}`;
+            let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' })); a.download = 'braille_results.txt'; a.click();
+        }
+        function copyResult(id) {
+            let t = $(id).textContent; if (t && t !== '—') navigator.clipboard.writeText(t).then(() => alert('Copied!'));
+        }
+    </script>
+</body>
+
+</html>

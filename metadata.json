@@ -1,0 +1,7 @@
+{
+  "name": "Braille & Voice Recognition Studio",
+  "description": "Convert Braille dot patterns and sentences to speech and accurate Braille notation with Tamil and multilingual voice support.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
